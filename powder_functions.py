@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
+from scipy.stats import ttest_ind
 
 
 # Function for calculating mass time derivative
@@ -17,11 +18,12 @@ def getMassFlow(data, RPM, start_time, end_time):
 
     for i in range(len(start_time)):
         # Segment data into chunks for a single RPM
-        start_RPM = np.argmin(np.abs(data['Time'] - start_time[i]))
-        end_RPM = np.argmin(np.abs(data['Time'] - end_time[i]))
+        start_deposition = np.argmin(np.abs(data['Time'] - start_time[i]))
+        end_deposition = np.argmin(np.abs(data['Time'] - end_time[i]))
 
-        time_RPM = data['Time'][start_RPM:end_RPM]
-        mass_RPM = data['Mass'][start_RPM:end_RPM]
+
+        time_RPM = data['Time'][start_deposition:end_deposition]
+        mass_RPM = data['Mass'][start_deposition:end_deposition]
 
         # Fit linear model
         slope, intercept, _, _, _ = linregress(time_RPM, mass_RPM)
@@ -41,7 +43,7 @@ def getMassFlow(data, RPM, start_time, end_time):
     plt.subplot(2, 3, 6)
     plt.plot(RPM, mdot * 60, 'o-')
     plt.xlabel('RPM')
-    plt.ylabel('mdot (g/min)')
+    plt.ylabel('mdot [g/min]')
     plt.grid(True)
 
     plt.tight_layout()
@@ -51,7 +53,7 @@ def getMassFlow(data, RPM, start_time, end_time):
 
 
 # Extract and clean time and mass columns from exported APW-Link data
-def cleanData(df):
+def cleanData(df, overestimate_delay):
     clean_data = pd.DataFrame(columns=['Time', 'Mass'])
 
     # Extract relevant data from csv file
@@ -63,17 +65,25 @@ def cleanData(df):
     data.columns = ['Time', 'Mass']
     data.dropna(inplace=True)
 
-    # Find max difference and index of max difference (start)
-    # Find max value and index of max value (end)
-    start_index = np.argmax(np.diff(data['Mass']))
-    #start_index = 100
+    # Find index of max difference (start)
+    # Find index of max value (end)
+    start_index = np.argmax(np.diff(data['Mass'].iloc[:overestimate_delay]))
     end_index = np.argmax(data['Mass'])
+
+    delay = data['Time'].iloc[start_index]
+
+    print("Experiment begins at row index " + str(start_index))
+    print("The delay is " + str(delay) + " sec")
+    print()
+
 
     clean_data['Time'] = data['Time'][start_index:end_index] - data['Time'][start_index]
     clean_data['Mass'] = data['Mass'][start_index:end_index] - data['Mass'][start_index]
 
-    return clean_data
+    return clean_data, delay
 
+
+#def fitTransfer
 
 #def plotMassFlow()
 
