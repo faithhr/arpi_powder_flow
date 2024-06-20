@@ -36,6 +36,7 @@ science_theme = theme(#panel.grid.major = element_line(size = 0.5, color = "whit
   panel.border = element_rect(colour = "black", fill=NA, size=3),
   text = element_text(color = "black"))
 
+
 # Mean vs Nominal
 ggplot(df) +
   geom_point(aes(x=Nominal.Dimension..um., y=Mean.Value..um., color=Printer), size=5) +
